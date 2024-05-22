@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 Chrome:
 ```
-chrome.exe --remote-debugging-port=9222 --user-data-dir="C:/Users/USER/AppData/Local/Google/Chrome/User Data"
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:/Users/USER/AppData/Local/Google/Chrome/User Data"
 ```
 
 ### Open Vortex
