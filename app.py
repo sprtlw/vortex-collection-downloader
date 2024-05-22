@@ -1,75 +1,126 @@
-import pyautogui
 import time
+import pyautogui
+import logging
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load button images
-vortex_button_image = "vortex.png"
-
-# Configure Selenium to use an existing Chrome session
-chrome_options = Options()
-chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
-
-# Initialize the WebDriver (assuming you're using Chrome)
-driver = webdriver.Chrome(options=chrome_options)
+VORTEX_BUTTON_IMAGE = "vortex.png"
 
 
-def wait_for_and_click_image(image_path):
-    while True:
+def configure_chrome_driver():
+    chrome_options = Options()
+    chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
+
+    driver = webdriver.Chrome(options=chrome_options)
+
+    logger.info("Chrome driver configured with debugger address.")
+
+    return driver
+
+
+def wait_for_and_click_image(image_path, confidence=0.8, timeout=30):
+    start_time = time.time()
+
+    while time.time() - start_time < timeout:
         try:
             location = pyautogui.locateCenterOnScreen(
-                image_path, confidence=0.8)
+                image_path, confidence=confidence)
+
             if location is not None:
                 pyautogui.click(location)
+                logger.info(f"Clicked on image: {image_path}")
+
                 return True
         except pyautogui.ImageNotFoundException:
             pass
-        time.sleep(1)  # Sleep for a short period before checking again
+
+        time.sleep(1)
+
+    logger.warning(f"Image {image_path} not found within {timeout} seconds.")
+
+    return False
 
 
-def click_web_download_buttons():
+def wait_for_new_tab(driver, timeout=10):
+    start_time = time.time()
+    initial_tabs = driver.window_handles
+
+    while time.time() - start_time < timeout:
+        current_tabs = driver.window_handles
+
+        if len(current_tabs) > len(initial_tabs):
+            return True
+
+        time.sleep(1)
+    return False
+
+
+def click_web_download_buttons(driver):
     try:
-        # Switch to the new window opened
-        time.sleep(2)
-        driver.switch_to.window(driver.window_handles[-1])
+        if not wait_for_new_tab(driver):
+            raise Exception("No new tab opened.")
 
-        # Find and click the grey "Slow Download" button by its ID
-        slow_download_button = driver.find_element(By.ID, "slowDownloadButton")
+        driver.switch_to.window(driver.window_handles[-1])
+        slow_download_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "slowDownloadButton"))
+        )
+
         slow_download_button.click()
 
-        # Wait for 3 seconds before closing the tab
+        logger.info("Clicked slow download button.")
+
         time.sleep(3)
 
-        # Check if there's more than one tab before closing
-        if len(driver.window_handles) > 1:
-            driver.close()
-            driver.switch_to.window(driver.window_handles[0])
+        close_extra_tabs(driver)
+
         return True
     except Exception as e:
-        print("Error clicking slow download button:", e)
-        try:
-            # Only attempt to close the tab if there's more than one
-            if len(driver.window_handles) > 1:
-                driver.close()
-                driver.switch_to.window(driver.window_handles[0])
-        except Exception as inner_e:
-            print("Error switching back to the main window:", inner_e)
+        logger.error(f"Error clicking slow download button: {e}")
+        close_extra_tabs(driver)
+
         return False
 
 
-# Open a placeholder page to initialize the driver
-driver.get("https://www.google.com")
+def close_extra_tabs(driver):
+    try:
+        while len(driver.window_handles) > 1:
+            driver.close()
+            driver.switch_to.window(driver.window_handles[0])
 
-try:
-    while True:
-        if wait_for_and_click_image(vortex_button_image):
-            if not click_web_download_buttons():
-                print("Retrying the process due to an error.")
+        logger.info("Closed extra tabs.")
+    except Exception as e:
+        logger.error(f"Error closing extra tabs: {e}")
+
+
+def main():
+    driver = configure_chrome_driver()
+
+    driver.get("https://www.google.com")
+
+    try:
+        while True:
+            if wait_for_and_click_image(VORTEX_BUTTON_IMAGE):
+                if not click_web_download_buttons(driver):
+                    logger.warning("Retrying the process due to an error.")
+                else:
+                    logger.info("Successfully handled the web download.")
             else:
-                print("Successfully handled the web download.")
-        else:
-            print("Waiting for the download button to appear on the screen...")
-finally:
-    # Close the driver at the end of the script
-    driver.quit()
+                logger.info(
+                    "Waiting for the download button to appear on the screen...")
+    finally:
+        driver.quit()
+
+        logger.info("Driver quit.")
+
+
+if __name__ == "__main__":
+    main()
