@@ -1,8 +1,16 @@
-# Vortex Collection Downloader
-Make sure vortex orange download button is visible before starting, as well as chrome in debugger. Both MUST be visible at the same time
-Open chrome debugger (replace USER with your windows username, and paste the command into cmd)
-```"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\Users\USER\AppData\Local\Google\Chrome\User Data"```
+# Vortex Collection Downloader Script
 
-```pip install -r requirements.txt```
+This script automates the process of installing Nexus Mods collections through Vortex using PyAutoGUI and handling the web downloading with Selenium.
 
-```python app.py```
+## Requirements
+- Google Chrome browser
+- ChromeDriver compatible with your Chrome version
+
+## Setup
+
+### Install Required Libraries
+
+Install the required libraries:
+
+```bash
+pip install -r requirements.txt
