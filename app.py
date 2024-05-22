@@ -22,6 +22,8 @@ def wait_for_and_click_image(image_path):
                 image_path, confidence=0.8)
             if location is not None:
                 pyautogui.click(location)
+                time.sleep(1)
+                pyautogui.moveTo(100, 100)
                 return True
         except pyautogui.ImageNotFoundException:
             pass
