@@ -6,6 +6,7 @@ This script automates the process of installing Nexus Mods collections through V
 - Google Chrome browser
 - ChromeDriver compatible with your Chrome version
 - Python
+- FastForward (skip wait time): [https://fastforward.team]
 
 ## Setup
 
