@@ -30,7 +30,9 @@ Ensure both vortex and chrome are visible. Start collection download and run the
 ### Run the Script
 
 Python:
+```
 python app.py
+```
 
 ## Contributing
 Feel free to submit pull requests or open issues if you encounter any problems or have suggestions for improvements.
